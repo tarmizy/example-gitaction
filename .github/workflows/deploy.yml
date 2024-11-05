@@ -6,33 +6,49 @@ on:
     branches: 
       - main
       - develop
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - main
+      - develop
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+      with:
+        ref: ${{ github.head_ref || github.ref_name }}
+    
+    - name: Get branch name
+      id: branch-name
+      run: |
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          echo "BRANCH_NAME=${{ github.head_ref }}" >> $GITHUB_ENV
+        else
+          echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+        fi
+        echo "Running on branch: ${{ env.BRANCH_NAME }}"
     
     - name: Download build artifact
       uses: actions/download-artifact@v4
       with:
-        name: build-files-${GITHUB_REF#refs/heads/}
+        name: build-files-${{ env.BRANCH_NAME }}
         path: dist/
         
     - name: Deploy to environment
       run: |
-        BRANCH=${GITHUB_REF#refs/heads/}
-        echo "Deploying from branch: $BRANCH"
+        echo "Deploying from branch: ${{ env.BRANCH_NAME }}"
         
-        if [[ "$BRANCH" == "main" ]]; then
+        if [[ "${{ env.BRANCH_NAME }}" == "main" ]]; then
           echo "Deploying to PRODUCTION environment..."
           cat dist/build.txt || echo "No build.txt found"
           echo "Production deployment completed!"
-        elif [[ "$BRANCH" == "develop" ]]; then
+        elif [[ "${{ env.BRANCH_NAME }}" == "develop" ]]; then
           echo "Deploying to STAGING environment..."
           cat dist/build.txt || echo "No build.txt found"
           echo "Staging deployment completed!"
         else
-          echo "Unknown branch: $BRANCH"
+          echo "Unknown branch: ${{ env.BRANCH_NAME }}"
           exit 1
         fi
