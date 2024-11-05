@@ -1,5 +1,5 @@
-# .github/workflows/deploy.yml
-name: Deploy
+# .github/workflows/build.yml
+name: Build
 
 on:
   push:
@@ -8,36 +8,26 @@ on:
       - develop
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
+    
     steps:
     - uses: actions/checkout@v4
-      
-    - name: Set environment variables
+    
+    - name: Build Project
       run: |
-        BRANCH=${GITHUB_REF#refs/heads/}
-        echo "BRANCH=$BRANCH" >> $GITHUB_ENV
-        echo "Detected branch: $BRANCH"
+        echo "Starting build process..."
+        echo "Building project on branch: ${GITHUB_REF#refs/heads/}"
+        echo "Build completed!"
         
-    - name: Download latest artifact
-      uses: actions/download-artifact@v4
+    - name: Create build artifact
+      run: |
+        mkdir -p dist
+        echo "Build from ${GITHUB_REF#refs/heads/} branch at $(date)" > dist/build.txt
+        
+    - name: Upload build result
+      uses: actions/upload-artifact@v4
       with:
-        name: build-files
+        name: build-files-${GITHUB_REF#refs/heads/}
         path: dist/
-        
-    - name: Deploy to environment
-      run: |
-        echo "Current branch: ${{ env.BRANCH }}"
-        
-        if [[ "${{ env.BRANCH }}" == "main" ]]; then
-          echo "Deploying to PRODUCTION environment..."
-          cat dist/build.txt || echo "No build.txt found"
-          echo "Production deployment completed!"
-        elif [[ "${{ env.BRANCH }}" == "develop" ]]; then
-          echo "Deploying to STAGING environment..."
-          cat dist/build.txt || echo "No build.txt found"
-          echo "Staging deployment completed!"
-        else
-          echo "Unknown branch: ${{ env.BRANCH }}"
-          exit 1
-        fi
+        retention-days: 1
