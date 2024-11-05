@@ -1,0 +1,32 @@
+# .github/workflows/build.yml
+name: Build
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Build Project
+      run: |
+        echo "Starting build process..."
+        echo "Building project..."
+        echo "Build completed!"
+        
+    - name: Create build artifact
+      run: |
+        mkdir -p dist
+        echo "This is a sample build" > dist/build.txt
+        
+    - name: Upload build result
+      uses: actions/upload-artifact@v2
+      with:
+        name: build-files
+        path: dist/
