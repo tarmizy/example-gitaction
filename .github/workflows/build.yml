@@ -3,9 +3,13 @@ name: Build
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: 
+      - main
+      - develop
   pull_request:
-    branches: [ main, develop ]
+    branches: 
+      - main
+      - develop
 
 jobs:
   build:
@@ -23,11 +27,11 @@ jobs:
     - name: Create build artifact
       run: |
         mkdir -p dist
-        echo "This is a sample build" > dist/build.txt
+        echo "This is a sample build from branch ${GITHUB_REF#refs/heads/}" > dist/build.txt
         
     - name: Upload build result
       uses: actions/upload-artifact@v4
       with:
-        name: build-files
+        name: build-files-${{ github.ref_name }}
         path: dist/
-        retention-days: 1 # Menyimpan artifact selama 1 hari
+        retention-days: 1

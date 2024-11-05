@@ -6,46 +6,52 @@ on:
     workflows: ["Build"]
     types:
       - completed
-    branches: [ main, develop ]
+    branches: 
+      - main
+      - develop
 
 jobs:
   deploy:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: |
+      github.event.workflow_run.conclusion == 'success' && 
+      (github.event.workflow_run.head_branch == 'main' || github.event.workflow_run.head_branch == 'develop')
     runs-on: ubuntu-latest
     steps:
-    # Checkout repository terlebih dahulu
     - uses: actions/checkout@v4
       with:
         ref: ${{ github.event.workflow_run.head_branch }}
-        fetch-depth: 0  # Mengambil semua history commit
+        fetch-depth: 0
         
     - name: Download artifact from build workflow
       uses: dawidd6/action-download-artifact@v2
       with:
         workflow: build.yml
-        name: build-files
+        name: build-files-${{ github.event.workflow_run.head_branch }}
         path: dist/
         workflow_conclusion: success
         run_id: ${{ github.event.workflow_run.id }}
         
-    - name: List downloaded files
-      run: ls -la dist/
+    - name: List files and branch info
+      run: |
+        echo "Current branch: ${{ github.event.workflow_run.head_branch }}"
+        echo "Workflow run ID: ${{ github.event.workflow_run.id }}"
+        echo "Files in dist directory:"
+        ls -la dist/
         
     - name: Deploy to environment
       run: |
-        # Get latest commit hash
-        LATEST_COMMIT=$(git rev-parse HEAD)
-        echo "Latest commit: $LATEST_COMMIT"
+        BRANCH="${{ github.event.workflow_run.head_branch }}"
+        echo "Deploying from branch: $BRANCH"
         
-        # Menggunakan head_branch dari workflow_run event
-        if [[ ${{ github.event.workflow_run.head_branch }} == 'main' ]]; then
+        if [[ $BRANCH == "main" ]]; then
           echo "Deploying to PRODUCTION environment..."
-          echo "Commit: $LATEST_COMMIT"
           cat dist/build.txt
           echo "Production deployment completed!"
-        elif [[ ${{ github.event.workflow_run.head_branch }} == 'develop' ]]; then
+        elif [[ $BRANCH == "develop" ]]; then
           echo "Deploying to STAGING environment..."
-          echo "Commit: $LATEST_COMMIT"
           cat dist/build.txt
-          echo "Staging deployment completed boos!"
+          echo "Staging deployment completed boskuh!"
+        else
+          echo "Unknown branch: $BRANCH"
+          exit 1
         fi
