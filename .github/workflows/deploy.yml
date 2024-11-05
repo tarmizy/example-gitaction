@@ -12,46 +12,31 @@ on:
 
 jobs:
   deploy:
-    if: |
-      github.event.workflow_run.conclusion == 'success' && 
-      (github.event.workflow_run.head_branch == 'main' || github.event.workflow_run.head_branch == 'develop')
+    if: github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-      with:
-        ref: ${{ github.event.workflow_run.head_branch }}
-        fetch-depth: 0
-        
     - name: Download artifact from build workflow
       uses: dawidd6/action-download-artifact@v2
       with:
         workflow: build.yml
-        name: build-files-${{ github.event.workflow_run.head_branch }}
+        name: build-files-${{ github.event.workflow_run.head_sha }}
         path: dist/
         workflow_conclusion: success
         run_id: ${{ github.event.workflow_run.id }}
-        
-    - name: List files and branch info
-      run: |
-        echo "Current branch: ${{ github.event.workflow_run.head_branch }}"
-        echo "Workflow run ID: ${{ github.event.workflow_run.id }}"
-        echo "Files in dist directory:"
-        ls -la dist/
         
     - name: Deploy to environment
       run: |
         BRANCH="${{ github.event.workflow_run.head_branch }}"
         echo "Deploying from branch: $BRANCH"
+        echo "Commit SHA: ${{ github.event.workflow_run.head_sha }}"
+        
+        echo "Content of build.txt:"
+        cat dist/build.txt
         
         if [[ $BRANCH == "main" ]]; then
           echo "Deploying to PRODUCTION environment..."
-          cat dist/build.txt
           echo "Production deployment completed!"
         elif [[ $BRANCH == "develop" ]]; then
           echo "Deploying to STAGING environment..."
-          cat dist/build.txt
-          echo "Staging deployment completed boskuh!"
-        else
-          echo "Unknown branch: $BRANCH"
-          exit 1
+          echo "Staging deployment completed boskuuuh!"
         fi

@@ -27,11 +27,11 @@ jobs:
     - name: Create build artifact
       run: |
         mkdir -p dist
-        echo "This is a sample build from branch ${GITHUB_REF#refs/heads/}" > dist/build.txt
+        echo "Build from ${GITHUB_REF#refs/heads/} branch at $(date)" > dist/build.txt
         
     - name: Upload build result
       uses: actions/upload-artifact@v4
       with:
-        name: build-files-${{ github.ref_name }}
+        name: build-files-${{ github.sha }}
         path: dist/
         retention-days: 1
