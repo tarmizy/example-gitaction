@@ -35,5 +35,5 @@ jobs:
         elif [[ ${{ github.event.workflow_run.head_branch }} == 'develop' ]]; then
           echo "Deploying to STAGING environment..."
           cat dist/build.txt
-          echo "Staging deployment completed!"
+          echo "Staging deployment completed bos!"
         fi
