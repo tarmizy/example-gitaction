@@ -1,42 +1,39 @@
-# .github/workflows/deploy.yml
-name: Deploy
+# .github/workflows/build.yml
+name: Build
 
 on:
-  workflow_run:
-    workflows: ["Build"]
-    types:
-      - completed
+  push:
     branches: 
       - main
       - develop
 
 jobs:
-  deploy:
-    if: github.event.workflow_run.conclusion == 'success'
+  build:
     runs-on: ubuntu-latest
+    
     steps:
-    - name: Download artifact from build workflow
-      uses: dawidd6/action-download-artifact@v2
-      with:
-        workflow: build.yml
-        name: build-files-${{ github.event.workflow_run.head_sha }}
-        path: dist/
-        workflow_conclusion: success
-        run_id: ${{ github.event.workflow_run.id }}
-        
-    - name: Deploy to environment
+    - uses: actions/checkout@v4
+    
+    - name: Set environment variables
       run: |
-        BRANCH="${{ github.event.workflow_run.head_branch }}"
-        echo "Deploying from branch: $BRANCH"
-        echo "Commit SHA: ${{ github.event.workflow_run.head_sha }}"
+        BRANCH=${GITHUB_REF#refs/heads/}
+        echo "BRANCH=$BRANCH" >> $GITHUB_ENV
+        echo "Building on branch: $BRANCH"
+    
+    - name: Build Project
+      run: |
+        echo "Starting build process..."
+        echo "Building project on branch: ${{ env.BRANCH }}"
+        echo "Build completed!"
         
-        echo "Content of build.txt:"
-        cat dist/build.txt
+    - name: Create build artifact
+      run: |
+        mkdir -p dist
+        echo "Build from ${{ env.BRANCH }} branch at $(date)" > dist/build.txt
         
-        if [[ $BRANCH == "main" ]]; then
-          echo "Deploying to PRODUCTION environment..."
-          echo "Production deployment completed!"
-        elif [[ $BRANCH == "develop" ]]; then
-          echo "Deploying to STAGING environment..."
-          echo "Staging deployment completed boskuuuh!"
-        fi
+    - name: Upload build result
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-files
+        path: dist/
+        retention-days: 1
