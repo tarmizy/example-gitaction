@@ -6,29 +6,15 @@ on:
     branches: 
       - main
       - develop
-  pull_request:
-    types: [opened, synchronize, reopened]
-    branches:
-      - main
-      - develop
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-      with:
-        ref: ${{ github.head_ref || github.ref_name }}
     
-    - name: Get branch name
-      id: branch-name
-      run: |
-        if [ "${{ github.event_name }}" = "pull_request" ]; then
-          echo "BRANCH_NAME=${{ github.head_ref }}" >> $GITHUB_ENV
-        else
-          echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
-        fi
-        echo "Running on branch: ${{ env.BRANCH_NAME }}"
+    - name: Set branch name
+      run: echo "BRANCH_NAME=${GITHUB_REF##*/}" >> $GITHUB_ENV
     
     - name: Download build artifact
       uses: actions/download-artifact@v4
@@ -47,7 +33,7 @@ jobs:
         elif [[ "${{ env.BRANCH_NAME }}" == "develop" ]]; then
           echo "Deploying to STAGING environment..."
           cat dist/build.txt || echo "No build.txt found"
-          echo "Staging deployment completed!"
+          echo "Staging deployment completed boskuhhh!"
         else
           echo "Unknown branch: ${{ env.BRANCH_NAME }}"
           exit 1
