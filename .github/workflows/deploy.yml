@@ -47,5 +47,5 @@ jobs:
           echo "Deploying to STAGING environment..."
           echo "Commit: $LATEST_COMMIT"
           cat dist/build.txt
-          echo "Staging deployment completed!"
+          echo "Staging deployment completed boos!"
         fi
